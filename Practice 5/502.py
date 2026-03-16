@@ -1,8 +1,8 @@
 import re
 
 txt = input()
-
-if re.match('Hello*', txt):
+s = input()
+if re.search(s , txt):
     print("Yes")
 else:
     print("No")

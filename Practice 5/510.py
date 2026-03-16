@@ -1,8 +1,6 @@
 import re
-
-txt = input()
-
-if re.match('Hello*', txt):
+s = input()
+if re.search(r"cat|dog", s):
     print("Yes")
 else:
     print("No")

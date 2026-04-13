@@ -1,12 +1,12 @@
 import psycopg2 
-from config import DB_NAME, DB_USER, DB_PORT, DB_HOST
+from config import DB_NAME, DB_USER, DB_PORT, DB_HOST , DB_PASSWORD
 
 def connect():
     try:
         conn = psycopg2.connect(
             dbname=DB_NAME,
             user=DB_USER,
-            password='',
+            password=DB_PASSWORD,
             host=DB_HOST,
             port=DB_PORT
         )

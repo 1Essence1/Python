@@ -1,59 +1,74 @@
+import psycopg2
 from connect import connect
+import csv
 
-def search_contacts():
-    pattern = input("Enter search pattern: ")
+def create_table():
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("SELECT * FROM get_contacts_by_pattern(%s)", (pattern,))
-    rows = cur.fetchall()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS phonebook (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(100),
+            phone VARCHAR(20)
+        )
+    """)
 
-    for row in rows:
-        print(row)
-
+    conn.commit()
     cur.close()
     conn.close()
 
+def insert_from_csv():
+    conn = connect()
+    cur = conn.cursor()
+
+    with open('contacts.csv', 'r') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            cur.execute(
+                "INSERT INTO phonebook (name, phone) VALUES (%s, %s)",
+                row
+            )
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("CSV imported!")
 
 def add_contact():
-    name = input("Enter name: ")
-    phone = input("Enter phone: ")
-
     conn = connect()
     cur = conn.cursor()
 
-    cur.execute("CALL upsert_contact(%s, %s)", (name, phone))
+    name = input("Name: ")
+    phone = input("Phone: ")
+    cur.execute(
+        "INSERT INTO phonebook (name, phone) VALUES (%s, %s)",
+        (name, phone)
+    )
     conn.commit()
-
     cur.close()
     conn.close()
+    print("Added!")
 
-
-def delete_contact():
-    name = input("Enter name (or leave empty): ")
-    phone = input("Enter phone (or leave empty): ")
-
-    name = name if name else None
-    phone = phone if phone else None
-
+def show_contacts():
     conn = connect()
     cur = conn.cursor()
+    print("1. Show all")
+    print("2. Search by name")
+    print("3. Search by phone prefix")
 
-    cur.execute("CALL delete_contact(%s, %s)", (name, phone))
-    conn.commit()
+    choice = input("Choose: ")
 
-    cur.close()
-    conn.close()
+    if choice == "1":
+        cur.execute("SELECT * FROM phonebook")
 
+    elif choice == "2":
+        name = input("Name: ")
+        cur.execute("SELECT * FROM phonebook WHERE name = %s", (name,))
 
-def paginate_contacts():
-    limit = int(input("Enter limit: "))
-    offset = int(input("Enter offset: "))
+    elif choice == "3":
+        prefix = input("Prefix: ")
+        cur.execute("SELECT * FROM phonebook WHERE phone LIKE %s", (prefix + "%",))
 
-    conn = connect()
-    cur = conn.cursor()
-
-    cur.execute("SELECT * FROM get_contacts_paginated(%s, %s)", (limit, offset))
     rows = cur.fetchall()
 
     for row in rows:
@@ -62,31 +77,70 @@ def paginate_contacts():
     cur.close()
     conn.close()
 
+def update_contact():
+    conn = connect()
+    cur = conn.cursor()
+
+    name = input("Name to update: ")
+    new_phone = input("New phone: ")
+    cur.execute(
+        "UPDATE phonebook SET phone = %s WHERE name = %s",
+        (new_phone, name)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Updated!")
+
+def delete_contact():
+    conn = connect()
+    cur = conn.cursor()
+
+    print("1. Delete by name")
+    print("2. Delete by phone")
+
+    choice = input("Choose: ")
+
+    if choice == "1":
+        name = input("Name: ")
+        cur.execute("DELETE FROM phonebook WHERE name = %s", (name,))
+
+    elif choice == "2":
+        phone = input("Phone: ")
+        cur.execute("DELETE FROM phonebook WHERE phone = %s", (phone,))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Deleted!")
 
 def main():
+    create_table()
+
     while True:
-        print("\n--- PHONEBOOK ---")
-        print("1. Search")
-        print("2. Add/Update contact")
-        print("3. Delete contact")
-        print("4. Show with pagination")
-        print("0. Exit")
+        print("1. Add contact")
+        print("2. Show contacts")
+        print("3. Update contact")
+        print("4. Delete contact")
+        print("5. Import from CSV")
+        print("6. Exit")
 
         choice = input("Choose: ")
 
         if choice == "1":
-            search_contacts()
-        elif choice == "2":
             add_contact()
+        elif choice == "2":
+            show_contacts()
         elif choice == "3":
-            delete_contact()
+            update_contact()
         elif choice == "4":
-            paginate_contacts()
-        elif choice == "0":
+            delete_contact()
+        elif choice == "5":
+            insert_from_csv()
+        elif choice == "6":
             break
         else:
-            print("Invalid choice")
-
+            print("Invalid choice!")
 
 if __name__ == "__main__":
     main()

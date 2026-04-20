@@ -131,8 +131,9 @@ while True:
     # Coin collision
     collected = pygame.sprite.spritecollide(P1, coins, True)
     if collected:
-        COIN_SCORE += len(collected)
-
+        COIN_SCORE += random.randint(1, 5)  # random coin value
+    if COIN_SCORE >= 25:
+        SPEED = 15
     # Draw
     DISPLAYSURF.blit(background, (0, 0))
 

@@ -332,7 +332,7 @@ def game_over_screen(username, score, level, best):
         draw_text(f"Personal best: {max(best, score)}", FONT, GREEN, WIDTH // 2, 215, True)
 
         retry_btn.draw()
-        menu_btn.
+        menu_btn.draw()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
